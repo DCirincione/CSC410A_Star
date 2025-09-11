@@ -1,24 +1,14 @@
+#Daniel Cirincione
+#4 September 2025
+#UTampa CSC410 A-Star Assignment
+'''
+This program implements the A* search algorithm on a 2D embedded, undirected graph.
+The input is a .data file specifying the number of cities, their labels and coordinates,
+and edges between cities. The program finds the shortest path from the first city listed
+to the last city listed using A*, printing the explored order, the shortest path, and total cost.
+'''
 
-#!/usr/bin/env python3
-"""
-A* pathfinding for a 2D-embedded, undirected graph defined in a text file.
-
-Input format:
-- First line: integer N = number of cities
-- Next N lines: "Label,x,y" with Label alphabetic, x and y numbers (ints or floats)
-  * The first label among these N is the start
-  * The last label among these N is the goal
-- Remaining lines: "U,V" edges (undirected). Either U,V or V,U indicates the same edge.
-  * Lines starting with '#' or blank lines are ignored anywhere.
-
-Edge cost: Euclidean distance between city coordinates.
-Heuristic: Euclidean distance from current city to goal.
-
-Usage:
-    python a_star.py /path/to/graph.data
-Options:
-    --show-debug   Print g, h, and f-values as nodes are processed
-"""
+#imports
 from __future__ import annotations
 import math
 import sys
@@ -33,6 +23,7 @@ class PQItem:
     node: str = field(compare=False)
 
 def _parse_line_csv(line: str, expected: int) -> List[str]:
+    #split a line by commas, strip whitespace, and verify expected number of parts
     parts = [p.strip() for p in line.split(",")]
     if len(parts) != expected:
         raise ValueError(f"Expected {expected} comma-separated values, got {len(parts)} in line: {line!r}")
@@ -40,10 +31,11 @@ def _parse_line_csv(line: str, expected: int) -> List[str]:
 
 def parse_graph(path: str):
     """Parse the graph file and return (start, goal, coords, adj)."""
+    #read all lines from the input file
     with open(path, "r", encoding="utf-8") as f:
         raw_lines = f.readlines()
 
-    # Strip blanks and comments
+    #strip blanks and comments (lines starting with '#')
     lines = []
     for ln in raw_lines:
         s = ln.strip()
@@ -54,6 +46,7 @@ def parse_graph(path: str):
     if not lines:
         raise ValueError("Empty (or comment-only) file.")
 
+    #parse number of cities N from first line
     try:
         n = int(lines[0])
     except ValueError:
@@ -67,7 +60,7 @@ def parse_graph(path: str):
     cities_order: List[str] = []
     coords: Dict[str, Tuple[float, float]] = {}
 
-    # Read N city lines
+    #parse city labels and coordinates
     for i in range(1, 1+n):
         label, xs, ys = _parse_line_csv(lines[i], 3)
         if not label.isalpha():
@@ -82,12 +75,14 @@ def parse_graph(path: str):
         coords[label] = (x, y)
         cities_order.append(label)
 
+    #define start and goal cities
     start = cities_order[0]
     goal = cities_order[-1]
 
-    # Build adjacency
+    #initialize adjacency dictionary for graph edges
     adj: Dict[str, Dict[str, float]] = {c: {} for c in cities_order}
 
+    #parse edges and compute Euclidean distances as weights
     for i in range(1+n, len(lines)):
         u, v = _parse_line_csv(lines[i], 2)
         if u not in coords or v not in coords:
@@ -101,9 +96,11 @@ def parse_graph(path: str):
     return start, goal, coords, adj
 
 def heuristic(a: Tuple[float, float], b: Tuple[float, float]) -> float:
+    #euclidean distance heuristic between points a and b
     return math.hypot(a[0]-b[0], a[1]-b[1])
 
 def reconstruct_path(parent: Dict[str, Optional[str]], goal: str) -> List[str]:
+    #reconstruct path from start to goal using parent pointers
     path: List[str] = []
     cur: Optional[str] = goal
     while cur is not None:
@@ -114,21 +111,28 @@ def reconstruct_path(parent: Dict[str, Optional[str]], goal: str) -> List[str]:
 
 def a_star(start: str, goal: str, coords: Dict[str, Tuple[float, float]], adj: Dict[str, Dict[str, float]], show_debug: bool=False):
     """Run A* and return (path, explored_order, total_cost)."""
+    #validate start and goal presence
     if start not in coords or goal not in coords:
         raise ValueError("Start or goal not found in coords.")
+    #precompute heuristic values for all nodes
     h = {v: heuristic(coords[v], coords[goal]) for v in coords}
+    #initialize g-score (cost from start) for all nodes to infinity
     g = {v: float("inf") for v in coords}
     g[start] = 0.0
+    #parent dictionary to reconstruct path
     parent: Dict[str, Optional[str]] = {start: None}
+    #list to record order nodes are explored
     explored_order: List[str] = []
 
-    counter = 0
+    counter = 0  #tie breaker counter for priority queue
+    #initialize priority queue with start node
     pq: List[PQItem] = [PQItem(g[start] + h[start], counter, start)]
     heapq.heapify(pq)
-    in_open: Set[str] = {start}
-    closed: Set[str] = set()
+    in_open: Set[str] = {start}  #track nodes in open set
+    closed: Set[str] = set()     #track nodes already processed
 
     while pq:
+        #pop node with lowest f = g + h
         item = heapq.heappop(pq)
         u = item.node
         if u in closed:
@@ -138,36 +142,44 @@ def a_star(start: str, goal: str, coords: Dict[str, Tuple[float, float]], adj: D
         closed.add(u)
         if show_debug:
             print(f"[POP] {u}: g={g[u]:.6f}, h={h[u]:.6f}, f={g[u]+h[u]:.6f}")
+            print()
+        #if goal reached, reconstruct and return path
         if u == goal:
             path = reconstruct_path(parent, goal)
             return path, explored_order, g[goal]
 
+        #relax edges from u to neighbors v
         for v, w in adj[u].items():
             if v in closed:
                 continue
             tentative = g[u] + w
             if tentative < g[v]:
+                #found better path to v
                 g[v] = tentative
                 parent[v] = u
                 counter += 1
                 heapq.heappush(pq, PQItem(g[v] + h[v], counter, v))
                 in_open.add(v)
                 if show_debug:
-                    print(f"  [RELAX] {u} -> {v}: w={w:.6f}, g[v]={g[v]:.6f}, h[v]={h[v]:.6f}, f={g[v]+h[v]:.6f}")
+                    print(f"    [RELAX] {u} -> {v}: w={w:.6f}, g[v]={g[v]:.6f}, h[v]={h[v]:.6f}, f={g[v]+h[v]:.6f}")
 
-    # No path
+    #no path found
     return [], explored_order, float("inf")
 
 def main(argv: list[str]) -> int:
     import argparse
+    #setup command line argument parser
     parser = argparse.ArgumentParser(description="A* on a 2D embedded, undirected graph.")
     parser.add_argument("input_file", help="Path to input .data file")
     parser.add_argument("--show-debug", action="store_true", help="Print g/h/f updates during search")
     args = parser.parse_args(argv)
 
+    #parse graph from input file
     start, goal, coords, adj = parse_graph(args.input_file)
+    #run A* search
     path, explored, cost = a_star(start, goal, coords, adj, show_debug=args.show_debug)
 
+    #print results
     print(f"Start: {start}")
     print(f"Goal:  {goal}")
     print("Explored order:")

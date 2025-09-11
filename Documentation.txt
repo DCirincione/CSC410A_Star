@@ -1,0 +1,39 @@
+Daniel Cirincione
+4 September 2025
+UTampa CSC410 A-Star Assignment
+
+Process Documentation — CSC410 A* Assignment
+
+1) Prompts I gave to the AI
+   - "Create a Python program that implements A* with a Euclidean heuristic."
+   - "Provide a basic A* search loop structure using a priority queue."
+   - "Suggest ideas for implementing a debug mode that shows node expansions and cost calculations."
+   - "Outline how to handle graph input and output formatting for pathfinding results."
+
+2) Code I used directly from the AI
+   - The raw A* loop scaffolding, including the priority queue management and basic node expansion logic.
+   - The initial debugging mode with some node expansion and cost calculation
+
+3) Code I modified with my own judgment
+   - I shaped most of the core functionality, including robust input parsing that ignores comments and blank lines.
+   - Enhanced input validation and error messaging to ensure data integrity.
+   - Developed comprehensive output formatting to match assignment requirements exactly.
+   - Improved debugging output readability and detail for easier tracing of algorithm behavior.
+   - Integrated heuristic calculations and cost updates in a way that fits the project needs.
+
+4) Code I wrote completely myself
+   - Command line argument handling using argparse with support for debug flags.
+   - Detailed graph parsing logic that accurately interprets input files and handles edge cases.
+   - Output formatting tailored to clearly present the final path and costs.
+   - Testing integration, running multiple test cases to confirm correctness and performance.
+   - Comprehensive documentation and process notes reflecting the development journey.
+
+5) Testing I performed
+   - Ran example-1.data and confirmed output: A -> B -> E with cost ≈ 2.828427.
+   - Ran example2-1.data and confirmed output: A -> B -> F -> GOAL with cost ≈ 5.064495.
+   - Ran with --show-debug to verify g/h/f values and node expansions.
+
+6) Notes on AI helpfulness
+   - The AI quickly scaffolded a working A* implementation, saving me a lot of time.
+   - It was less helpful for writing the README and process explanations — those required a lot of adjustment to accuratley match my entire process without leaving out important details or steps.
+   - I still needed to understand the algorithm to confirm correctness and adapt the codebase to accuratley meet project/rubric requirements.
