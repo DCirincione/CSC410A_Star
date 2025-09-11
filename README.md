@@ -10,7 +10,7 @@ and prints the explored order, the shortest path, and the total path cost.
 - Coordinates may be integers or floats.  
 - Labels must be alphabetic characters (e.g., `A`, `B`, `Goal`). 
 
-## Command to run the program
+## Commands to run the program
 python3 a_star.py inputs/example-1.data
 python3 a_star.py inputs/example2-1.data
 python3 a_star.py inputs/example-1.data --show-debug
